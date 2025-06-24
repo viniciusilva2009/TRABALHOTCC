@@ -1,1 +1,217 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FoodSzy App</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: sans-serif;
+    }
+    body {
+      background: linear-gradient(135deg, #0f0f1b, #fbb03b);
+      color: white;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    .page {
+      background: #1e1e2e;
+      border-radius: 15px;
+      padding: 20px;
+      margin-bottom: 30px;
+      width: 300px;
+      display: none;
+      opacity: 0;
+      transition: opacity 0.5s ease;
+    }
+    .page.active {
+      display: block;
+      opacity: 1;
+    }
+    input, button, select {
+      width: 100%;
+      margin: 10px 0;
+      padding: 10px;
+      border-radius: 5px;
+      border: none;
+    }
+    button {
+      background: #fbb03b;
+      color: black;
+      font-weight: bold;
+      cursor: pointer;
+    }
+    .product, .cart-item, .summary-item {
+      background: #333;
+      border-radius: 10px;
+      margin: 10px 0;
+      padding: 10px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .payment-option {
+      background: #2a2a3b;
+      border-radius: 10px;
+      padding: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin: 10px 0;
+    }
+  </style>
+</head>
+<body>
+  <!-- Página 1: Registro -->
+  <div class="page active" id="page-register">
+    <h2>Registrar</h2>
+    <input type="text" id="nome" placeholder="Seu nome">
+    <input type="password" id="senha" placeholder="Senha">
+    <input type="email" id="email" placeholder="Seu E-mail">
+    <button onclick="registrar()">Register</button>
+  </div>
 
+  <!-- Página 2: Lanches -->
+  <div class="page" id="page-lanches">
+    <h2>Lanches</h2>
+    <div class="product" onclick="addToCart('Mussarela', 6.00)">Mussarela <span>R$6,00</span></div>
+    <div class="product" onclick="addToCart('Calabresa', 6.00)">Calabresa <span>R$6,00</span></div>
+    <div class="product" onclick="addToCart('Frango & Catupiri', 6.00)">Frango & Catupiri <span>R$6,00</span></div>
+    <div class="product" onclick="addToCart('Enrolado de Salsicha', 5.00)">Enrolado de Salsicha <span>R$5,00</span></div>
+    <div class="product" onclick="addToCart('X-Szy', 25.00)">X-Szy <span>R$25,00</span></div>
+    <div class="product" onclick="addToCart('Esfirra de Carne', 6.00)">Esfirra de Carne <span>R$6,00</span></div>
+    <button onclick="goToCart()">Ver Carrinho</button>
+  </div>
+
+  <!-- Página 3: Carrinho -->
+  <div class="page" id="page-carrinho">
+    <h2>Meu carrinho de compras</h2>
+    <div id="cart-items"></div>
+    <button onclick="goToResumo()">Próximo</button>
+  </div>
+
+  <!-- Página 4: Pagamento -->
+  <div class="page" id="page-resumo">
+    <h2>Resumo do Pedido</h2>
+    <div id="resumo-itens"></div>
+    <hr>
+    <div class="summary-item"><strong>Total</strong> <strong id="resumo-total">R$0,00</strong></div>
+
+    <h3>Método de Pagamento</h3>
+    <div class="payment-option">MasterCard **0505 <input type="radio" name="pagamento"></div>
+    <div class="payment-option">Visa **0505 <input type="radio" name="pagamento"></div>
+    <div class="payment-option">PIX <input type="radio" name="pagamento"></div>
+
+    <label><input type="checkbox"> Salvar detalhes do cartão</label>
+    <button onclick="finalizarPedido()">Pagar agora</button>
+  </div>
+
+  <script>
+    let carrinho = JSON.parse(localStorage.getItem('carrinho')) || {};
+
+    function mostrarPagina(id) {
+      document.querySelectorAll('.page').forEach(p => {
+        p.classList.remove('active');
+        setTimeout(() => p.style.display = 'none', 500);
+      });
+      const nova = document.getElementById(id);
+      nova.style.display = 'block';
+      setTimeout(() => nova.classList.add('active'), 10);
+    }
+
+    function registrar() {
+      const nome = document.getElementById('nome').value;
+      const senha = document.getElementById('senha').value;
+      const email = document.getElementById('email').value;
+      if (!nome || !senha || !email) {
+        alert('Preencha todos os campos!');
+        return;
+      }
+      mostrarPagina('page-lanches');
+    }
+
+    function addToCart(item, preco) {
+      if (!carrinho[item]) {
+        carrinho[item] = { preco, quantidade: 1 };
+      } else {
+        carrinho[item].quantidade++;
+      }
+      localStorage.setItem('carrinho', JSON.stringify(carrinho));
+      alert(item + ' adicionado ao carrinho!');
+    }
+
+    function goToCart() {
+      const container = document.getElementById('cart-items');
+      container.innerHTML = '';
+      Object.entries(carrinho).forEach(([item, dados]) => {
+        const div = document.createElement('div');
+        div.className = 'cart-item';
+        div.innerHTML = `
+          ${item} R$${(dados.preco * dados.quantidade).toFixed(2)}
+          <button onclick="alterarQtd('${item}', -1)">-</button>
+          ${dados.quantidade}
+          <button onclick="alterarQtd('${item}', 1)">+</button>`;
+        container.appendChild(div);
+      });
+      mostrarPagina('page-carrinho');
+    }
+
+    function alterarQtd(item, delta) {
+      carrinho[item].quantidade += delta;
+      if (carrinho[item].quantidade <= 0) delete carrinho[item];
+      localStorage.setItem('carrinho', JSON.stringify(carrinho));
+      goToCart();
+    }
+
+    function goToResumo() {
+      const container = document.getElementById('resumo-itens');
+      container.innerHTML = '';
+      let total = 0;
+      Object.entries(carrinho).forEach(([item, dados]) => {
+        const div = document.createElement('div');
+        div.className = 'summary-item';
+        const subtotal = dados.preco * dados.quantidade;
+        div.innerText = ${item} x${dados.quantidade} R$${subtotal.toFixed(2)};
+        container.appendChild(div);
+        total += subtotal;
+      });
+      document.getElementById('resumo-total').innerText = 'R$' + total.toFixed(2);
+      mostrarPagina('page-resumo');
+    }
+
+    function finalizarPedido() {
+      alert('Pedido finalizado com sucesso!');
+
+      // Salvar histórico
+      const historico = JSON.parse(localStorage.getItem('historico')) || [];
+      const data = new Date().toLocaleString();
+      const pedido = { data, itens: carrinho };
+      historico.push(pedido);
+      localStorage.setItem('historico', JSON.stringify(historico));
+
+      // Simulação de envio de e-mail
+      console.log('Simulando envio de e-mail...');
+      console.log('Resumo do pedido:', JSON.stringify(pedido, null, 2));
+
+      carrinho = {};
+      localStorage.removeItem('carrinho');
+      mostrarPagina('page-register');
+    }
+
+    // Restaurar carrinho ou exibir histórico
+    window.addEventListener('DOMContentLoaded', () => {
+      if (Object.keys(carrinho).length > 0) {
+        goToCart();
+      }
+      const historico = JSON.parse(localStorage.getItem('historico')) || [];
+      console.log('Histórico de pedidos:', historico);
+    });
+  </script>
+</body>
+</html>
