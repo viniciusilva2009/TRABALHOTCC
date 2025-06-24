@@ -27,12 +27,9 @@
       margin-bottom: 30px;
       width: 300px;
       display: none;
-      opacity: 0;
-      transition: opacity 0.5s ease;
     }
     .page.active {
       display: block;
-      opacity: 1;
     }
     input, button, select {
       width: 100%;
@@ -104,8 +101,8 @@
     <div class="summary-item"><strong>Total</strong> <strong id="resumo-total">R$0,00</strong></div>
 
     <h3>Método de Pagamento</h3>
-    <div class="payment-option">MasterCard **0505 <input type="radio" name="pagamento"></div>
-    <div class="payment-option">Visa **0505 <input type="radio" name="pagamento"></div>
+    <div class="payment-option">MasterCard ****0505 <input type="radio" name="pagamento"></div>
+    <div class="payment-option">Visa ****0505 <input type="radio" name="pagamento"></div>
     <div class="payment-option">PIX <input type="radio" name="pagamento"></div>
 
     <label><input type="checkbox"> Salvar detalhes do cartão</label>
@@ -113,16 +110,11 @@
   </div>
 
   <script>
-    let carrinho = JSON.parse(localStorage.getItem('carrinho')) || {};
+    let carrinho = {};
 
     function mostrarPagina(id) {
-      document.querySelectorAll('.page').forEach(p => {
-        p.classList.remove('active');
-        setTimeout(() => p.style.display = 'none', 500);
-      });
-      const nova = document.getElementById(id);
-      nova.style.display = 'block';
-      setTimeout(() => nova.classList.add('active'), 10);
+      document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+      document.getElementById(id).classList.add('active');
     }
 
     function registrar() {
@@ -142,7 +134,6 @@
       } else {
         carrinho[item].quantidade++;
       }
-      localStorage.setItem('carrinho', JSON.stringify(carrinho));
       alert(item + ' adicionado ao carrinho!');
     }
 
@@ -165,7 +156,6 @@
     function alterarQtd(item, delta) {
       carrinho[item].quantidade += delta;
       if (carrinho[item].quantidade <= 0) delete carrinho[item];
-      localStorage.setItem('carrinho', JSON.stringify(carrinho));
       goToCart();
     }
 
@@ -177,7 +167,7 @@
         const div = document.createElement('div');
         div.className = 'summary-item';
         const subtotal = dados.preco * dados.quantidade;
-        div.innerText = ${item} x${dados.quantidade} R$${subtotal.toFixed(2)};
+        div.innerText = `${item} x${dados.quantidade} R$${subtotal.toFixed(2)}`;
         container.appendChild(div);
         total += subtotal;
       });
@@ -187,31 +177,9 @@
 
     function finalizarPedido() {
       alert('Pedido finalizado com sucesso!');
-
-      // Salvar histórico
-      const historico = JSON.parse(localStorage.getItem('historico')) || [];
-      const data = new Date().toLocaleString();
-      const pedido = { data, itens: carrinho };
-      historico.push(pedido);
-      localStorage.setItem('historico', JSON.stringify(historico));
-
-      // Simulação de envio de e-mail
-      console.log('Simulando envio de e-mail...');
-      console.log('Resumo do pedido:', JSON.stringify(pedido, null, 2));
-
       carrinho = {};
-      localStorage.removeItem('carrinho');
       mostrarPagina('page-register');
     }
-
-    // Restaurar carrinho ou exibir histórico
-    window.addEventListener('DOMContentLoaded', () => {
-      if (Object.keys(carrinho).length > 0) {
-        goToCart();
-      }
-      const historico = JSON.parse(localStorage.getItem('historico')) || [];
-      console.log('Histórico de pedidos:', historico);
-    });
   </script>
 </body>
 </html>
